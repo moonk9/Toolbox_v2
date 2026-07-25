@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prompt Toolbox</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="favicon.png">
+    
+    <!-- ==========================================
+         CSS 구역 (UI/UX 전면 리디자인)
+    =========================================== -->
+    <style>
+        :root {
+            /* Colors */
+            --bg-main: #f6f8fa;
+            --card-bg: #ffffff;
+            --border: #e5e7eb;
+            --text-main: #24292f;
+            --text-sub: #6b7280;
+            --accent: #8b5cf6;
+            --accent-glow: rgba(139, 92, 246, 0.12);
+            --danger: #d97757;
+            --danger-hover: #c55f46;
+            --danger-bg: #fff6f4; /* 연한 살구색 */
+            --danger-border: #fce4dc;
+            
+            /* Dimensions */
+            --sidebar-width: 176px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', 'Pretendard', 'Noto Sans KR', sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            font-size: 14px;
+            line-height: 1.5;
+            height: 100vh;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* 전체 앱 컨테이너 */
+        .app-container {
+            display: flex;
+            height: 100%;
+            padding: 12px;
+            gap: 16px;
+        }
+
+        /* ==========================================
+           1. 왼쪽 사이드바
+        =========================================== */
+        .sidebar {
+            width: var(--sidebar-width);
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .sidebar-header {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-main);
+            padding: 8px 4px 20px 4px;
+            letter-spacing: -0.3px;
+        }
+
+        .nav-group {
+            margin-bottom: 24px;
+        }
+
+        .nav-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-sub);
+            margin: 0 4px 8px 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-items {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        /* 사이드바 공통 버튼 (VSCode 스타일) */
+        button {
+            height: 34px;
+            font-size: 13px;
+            font-weight: 500;
+            font-family: inherit;
+            background-color: #ffffff;
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 150ms, transform 150ms, border-color 150ms;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 0 12px;
+            box-shadow: none; /* 그림자 최소화 */
+        }
+
+        button:hover {
+            background-color: #f9fafb; /* 아주 연한 회색 */
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        button:focus-visible {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        /* Danger 버튼 (살구색) */
+        .btn-danger {
+            background-color: var(--danger-bg);
+            border-color: var(--danger-border);
+            color: var(--danger);
+        }
+
+        .btn-danger:hover {
+            background-color: #fcece7;
+            color: var(--danger-hover);
+            border-color: #fbd6cb;
+        }
+
+        /* 가로 분할 버튼 영역 */
+        .row-horizontal {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 4px;
+        }
+
+        .row-horizontal button {
+            flex: 1;
+            padding: 0 4px;
+            margin-bottom: 0;
+        }
+
+        /* 사이드바 입력창 */
+        .sidebar-input {
+            width: 100%;
+            height: 34px;
+            padding: 0 10px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 13px;
+            font-family: inherit;
+            background-color: #ffffff;
+            color: var(--text-main);
+            transition: border-color 150ms, box-shadow 150ms;
+            margin-bottom: 4px;
+        }
+
+        .sidebar-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+            outline: none;
+        }
+
+        .sidebar-input::placeholder {
+            color: #9ca3af;
+        }
+
+        /* ==========================================
+           2. 메인 컨텐츠 영역 (가운데 & 오른쪽)
+        =========================================== */
+        .main-content {
+            flex: 1;
+            display: flex;
+            gap: 16px;
+            min-width: 0;
+        }
+
+        .col {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            gap: 16px;
+        }
+
+        /* ==========================================
+           3. 카드 공통 스타일
+        =========================================== */
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            box-shadow: 0 1px 3px rgba(0,0,0,.04); /* 그림자 최소화 */
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .card-full {
+            flex: 1;
+        }
+
+        /* 헤더 스타일 */
+        .card-header {
+            height: 44px;
+            border-bottom: 1px solid var(--border);
+            padding: 0 16px;
+            display: flex;
+            align-items: center;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-main);
+            background-color: #ffffff;
+            flex-shrink: 0;
+        }
+
+        .card-body {
+            flex: 1;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            min-height: 0; /* 내부 텍스트에어리어가 넘치지 않게 함 */
+        }
+
+        /* ==========================================
+           4. Textarea 스타일
+        =========================================== */
+        textarea {
+            width: 100%;
+            height: 100%;
+            background-color: #fcfcfd;
+            border: 1px solid #dfe3e8;
+            border-radius: 10px;
+            padding: 16px;
+            font-size: 14px;
+            font-family: inherit;
+            color: var(--text-main);
+            resize: none;
+            outline: none;
+            transition: border-color 150ms, box-shadow 150ms;
+            line-height: 1.6;
+        }
+
+        textarea:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        textarea::placeholder {
+            color: #9ca3af;
+        }
+
+        /* ==========================================
+           5. Statistics (통계) 스타일
+        =========================================== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+
+        .stat-item {
+            height: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 0 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background-color: #ffffff;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-main);
+            line-height: 1.2;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text-sub);
+            margin-top: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* ==========================================
+           스크롤바 커스텀 (미니멀 디자인)
+        =========================================== */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af;
+        }
+
+        /* ==========================================
+           반응형 레이아웃
+        =========================================== */
+        @media (max-width: 1000px) {
+            body {
+                height: auto;
+                overflow-y: auto;
+            }
+            .app-container {
+                flex-direction: column;
+                height: auto;
+                min-height: 100vh;
+            }
+            .sidebar {
+                width: 100%;
+                flex-direction: row;
+                flex-wrap: wrap;
+                align-items: flex-start;
+                gap: 16px;
+            }
+            .sidebar-header {
+                width: 100%;
+                padding: 4px 4px 8px 4px;
+                border-bottom: 1px solid var(--border);
+            }
+            .nav-group {
+                flex: 1;
+                min-width: 160px;
+                margin-bottom: 0;
+            }
+            .main-content {
+                flex-direction: column;
+            }
+            .col {
+                height: auto;
+            }
+            .card-full {
+                min-height: 400px;
+            }
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- 1. 좌측 사이드바: 기능 버튼들 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                Prompt Toolbox
+            </div>
+
+            <!-- [ 정리 ] 그룹 -->
+            <div class="nav-group">
+                <div class="nav-title">Clean</div>
+                <div class="nav-items">
+                    <button id="btnCleanOne">1줄 정리</button>
+                    <button id="btnCleanAll">전체 정리</button>
+                    <button id="btnCopy">결과/입력 복사</button>
+                    <button id="btnClear" class="btn-danger">초기화</button>
+                </div>
+            </div>
+
+            <!-- [ 분석 ] 그룹 -->
+            <div class="nav-group">
+                <div class="nav-title">Analyze</div>
+                <div class="nav-items">
+                    <button id="btnToken">예상 토큰 계산</button>
+                    <button id="btnTopWords">단어 빈도 TOP20</button>
+                </div>
+            </div>
+
+            <!-- [ 검사 ] 그룹 -->
+            <div class="nav-group">
+                <div class="nav-title">Inspect</div>
+                <div class="nav-items">
+                    <button id="btnDupWords">중복 단어 찾기</button>
+                    <button id="btnDupTags">중복 태그 찾기</button>
+                    <button id="btnRemoveDupTags">중복 태그 제거</button>
+                </div>
+            </div>
+
+            <!-- [ 치환 ] 그룹 -->
+            <div class="nav-group">
+                <div class="nav-title">Replace</div>
+                <div class="nav-items">
+                    <input type="text" id="findText" class="sidebar-input" placeholder="찾을 내용">
+                    <input type="text" id="replaceText" class="sidebar-input" placeholder="바꿀 내용">
+                    <div class="row-horizontal">
+                        <button id="btnFindNext">다음 찾기</button>
+                        <button id="btnReplace">바꾸기</button>
+                    </div>
+                    <button id="btnReplaceAll">모두 바꾸기</button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 메인 컨텐츠 영역 -->
+        <main class="main-content">
+            
+            <!-- 2. 중앙: 텍스트 입력창 -->
+            <div class="col">
+                <div class="card card-full">
+                    <div class="card-header">Input</div>
+                    <div class="card-body">
+                        <textarea id="inputText" placeholder="여기에 프롬프트 또는 텍스트를 입력하세요..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. 우측: 통계 및 결과 출력창 -->
+            <div class="col">
+                
+                <!-- 통계 카드 -->
+                <div class="card">
+                    <div class="card-header">Statistics</div>
+                    <div class="card-body" style="padding-bottom: 20px;">
+                        <div class="stats-grid" id="statsGrid">
+                            <div class="stat-item"><div class="stat-value" id="stChars">0</div><div class="stat-label">전체 문자</div></div>
+                            <div class="stat-item"><div class="stat-value" id="stCharsNoSpace">0</div><div class="stat-label">공백 제외</div></div>
+                            <div class="stat-item"><div class="stat-value" id="stWords">0</div><div class="stat-label">단어 개수</div></div>
+                            <div class="stat-item"><div class="stat-value" id="stParas">0</div><div class="stat-label">문단 개수</div></div>
+                            <div class="stat-item"><div class="stat-value" id="stSents">0</div><div class="stat-label">문장 개수</div></div>
+                            <div class="stat-item"><div class="stat-value" id="stSentPerPara">0</div><div class="stat-label">문단당 문장</div></div>
+                            <div class="stat-item"><div class="stat-value" id="stWordPerSent">0</div><div class="stat-label">문장당 단어</div></div>
+                            <div class="stat-item"><div class="stat-value" id="stCommas">0</div><div class="stat-label">쉼표 개수</div></div>
+                            <div class="stat-item"><div class="stat-value" id="stBytes">0</div><div class="stat-label">바이트 수</div></div>
+                            <div class="stat-item"><div class="stat-value" id="stLines">0</div><div class="stat-label">줄 수</div></div>
+                            <div class="stat-item"><div class="stat-value" id="stTabs">0</div><div class="stat-label">탭 개수</div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 결과 출력창 -->
+                <div class="card card-full">
+                    <div class="card-header">Output</div>
+                    <div class="card-body">
+                        <textarea id="outputText" readonly placeholder="기능 실행 결과가 여기에 표시됩니다."></textarea>
+                    </div>
+                </div>
+                
+            </div>
+        </main>
+    </div>
+
+    <!-- ==========================================
+         JavaScript 구역 (절대 변경하지 않음)
+    =========================================== -->
+    <script>
+        // DOM 요소 캐싱
+        const DOM = {
+            input: document.getElementById('inputText'),
+            output: document.getElementById('outputText'),
+            stats: {
+                chars: document.getElementById('stChars'),
+                charsNoSpace: document.getElementById('stCharsNoSpace'),
+                words: document.getElementById('stWords'),
+                paras: document.getElementById('stParas'),
+                sents: document.getElementById('stSents'),
+                sentPerPara: document.getElementById('stSentPerPara'),
+                wordPerSent: document.getElementById('stWordPerSent'),
+                commas: document.getElementById('stCommas'),
+                bytes: document.getElementById('stBytes'),
+                lines: document.getElementById('stLines'),
+                tabs: document.getElementById('stTabs'),
+            }
+        };
+
+        /**
+         * 1. 실시간 통계 계산 로직
+         */
+        const calculateStats = () => {
+            const text = DOM.input.value;
+            const textTrim = text.trim();
+
+            const chars = text.length;
+            const charsNoSpace = text.replace(/\s/g, '').length; 
+            const words = textTrim ? textTrim.split(/\s+/).length : 0;
+            const paras = textTrim ? text.split(/\n\s*\n/).filter(p => p.trim().length > 0).length : 0;
+            const sents = textTrim ? text.split(/[.?!]+/).filter(s => s.trim().length > 0).length : 0;
+            const lines = text === '' ? 0 : text.split('\n').length;
+            
+            const commas = (text.match(/,/g) || []).length;
+            const tabs = (text.match(/\t/g) || []).length;
+            
+            // UTF-8 바이트 계산
+            const bytes = new TextEncoder().encode(text).length;
+
+            const sentPerPara = paras > 0 ? (sents / paras).toFixed(1) : 0;
+            const wordPerSent = sents > 0 ? (words / sents).toFixed(1) : 0;
+
+            // DOM 업데이트
+            DOM.stats.chars.textContent = chars.toLocaleString();
+            DOM.stats.charsNoSpace.textContent = charsNoSpace.toLocaleString();
+            DOM.stats.words.textContent = words.toLocaleString();
+            DOM.stats.paras.textContent = paras.toLocaleString();
+            DOM.stats.sents.textContent = sents.toLocaleString();
+            DOM.stats.sentPerPara.textContent = sentPerPara;
+            DOM.stats.wordPerSent.textContent = wordPerSent;
+            DOM.stats.commas.textContent = commas.toLocaleString();
+            DOM.stats.bytes.textContent = bytes.toLocaleString();
+            DOM.stats.lines.textContent = lines.toLocaleString();
+            DOM.stats.tabs.textContent = tabs.toLocaleString();
+        };
+
+        DOM.input.addEventListener('input', calculateStats);
+
+        /**
+         * 2. 결과 출력 공통 함수
+         */
+        const printResult = (content, headerTitle = null) => {
+            if (headerTitle) {
+                DOM.output.value = `${headerTitle}\n--------\n${content}`;
+            } else {
+                DOM.output.value = content;
+            }
+        };
+
+        /**
+         * 3. 단어 빈도 계산 공통 함수 
+         */
+        const getWordFrequencies = (text, minLength = 1) => {
+            const words = text.match(/[가-힣a-zA-Z0-9_]+/g) || [];
+            const freqMap = {};
+            words.forEach(w => {
+                if (w.length >= minLength) {
+                    freqMap[w] = (freqMap[w] || 0) + 1;
+                }
+            });
+            return freqMap;
+        };
+
+
+        /**
+         * 4. 기능 버튼 로직 구현
+         */
+
+        // [정리] 1줄 정리
+        document.getElementById('btnCleanOne').addEventListener('click', () => {
+            const text = DOM.input.value.replace(/\r\n/g, '\n');
+            const cleaned = text.replace(/\n\n/g, '\n');
+            printResult(cleaned);
+        });
+
+        // [정리] 전체 정리
+        document.getElementById('btnCleanAll').addEventListener('click', () => {
+            const text = DOM.input.value;
+            const cleaned = text.replace(/(\r?\n[ \t]*){1,}\r?\n/g, '\n');
+            printResult(cleaned);
+        });
+
+        // [정리] 복사
+        document.getElementById('btnCopy').addEventListener('click', async (e) => {
+            const textToCopy = DOM.output.value || DOM.input.value;
+            if (!textToCopy) {
+                alert('복사할 텍스트가 없습니다.');
+                return;
+            }
+            try {
+                await navigator.clipboard.writeText(textToCopy);
+                const btn = e.target;
+                const originalText = btn.textContent;
+                btn.textContent = '복사 완료!';
+                setTimeout(() => btn.textContent = originalText, 1500);
+            } catch (err) {
+                alert('복사에 실패했습니다.');
+            }
+        });
+
+        // [정리] 초기화
+        document.getElementById('btnClear').addEventListener('click', () => {
+            DOM.input.value = '';
+            DOM.output.value = '';
+            calculateStats();
+        });
+
+
+        // [분석] 예상 토큰 계산
+        document.getElementById('btnToken').addEventListener('click', () => {
+            const text = DOM.input.value;
+            const charCount = text.length;
+            const estimatedTokens = Math.ceil(charCount / 3.7);
+            
+            const content = `문자 수\n${charCount.toLocaleString()}\n\n예상 토큰\n${estimatedTokens.toLocaleString()}`;
+            printResult(content, "예상 토큰 계산");
+        });
+
+        // [분석] 단어 빈도 TOP20
+        document.getElementById('btnTopWords').addEventListener('click', () => {
+            const text = DOM.input.value;
+            const freqMap = getWordFrequencies(text, 1);
+            
+            const sorted = Object.entries(freqMap)
+                .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+                .slice(0, 20);
+            
+            const content = sorted.length 
+                ? sorted.map(item => `${item[0]} ${item[1]}`).join('\n')
+                : '분석할 단어가 없습니다.';
+            
+            printResult(content, "단어 빈도 TOP20");
+        });
+
+
+        // [검사] 중복 단어 찾기 (2글자 이상)
+        document.getElementById('btnDupWords').addEventListener('click', () => {
+            const text = DOM.input.value;
+            const freqMap = getWordFrequencies(text, 2);
+            
+            const sorted = Object.entries(freqMap)
+                .filter(item => item[1] >= 2)
+                .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+            
+            const content = sorted.length 
+                ? sorted.map(item => `${item[0]} ${item[1]}`).join('\n')
+                : '중복된 2글자 이상 단어가 없습니다.';
+            
+            printResult(content, "중복 단어 (2글자 이상)");
+        });
+
+        // [검사] 중복 태그 찾기
+        const getTagFrequencies = (text) => {
+            const tags = text.split(',').map(t => t.trim()).filter(t => t !== '');
+            const freqMap = {};
+            tags.forEach(t => freqMap[t] = (freqMap[t] || 0) + 1);
+            return { tags, freqMap };
+        };
+
+        document.getElementById('btnDupTags').addEventListener('click', () => {
+            const text = DOM.input.value;
+            const { freqMap } = getTagFrequencies(text);
+            
+            const sorted = Object.entries(freqMap)
+                .filter(item => item[1] >= 2)
+                .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+            
+            const content = sorted.length 
+                ? sorted.map(item => `${item[0]} ${item[1]}`).join('\n')
+                : '중복된 태그가 없습니다.';
+            
+            printResult(content, "중복 태그 찾기");
+        });
+
+        // [검사] 중복 태그 제거
+        document.getElementById('btnRemoveDupTags').addEventListener('click', () => {
+            const text = DOM.input.value;
+            const { tags } = getTagFrequencies(text);
+            
+            const uniqueTags = [...new Set(tags)];
+            const content = uniqueTags.join(', ');
+            
+            printResult(content);
+        });
+
+        // ==========================================
+        // [치환] 기능 (메모장 스타일)
+        // ==========================================
+        
+        // 1. 다음 찾기
+        document.getElementById('btnFindNext').addEventListener('click', () => {
+            const textarea = DOM.input;
+            const findStr = document.getElementById('findText').value;
+            
+            if (!findStr) {
+                alert('찾을 내용을 입력해주세요.');
+                return;
+            }
+
+            const content = textarea.value;
+            // 현재 커서 위치 또는 선택된 영역의 끝에서부터 검색 시작
+            let startIndex = textarea.selectionEnd;
+            let index = content.indexOf(findStr, startIndex);
+
+            if (index === -1) {
+                // 끝까지 찾았으면 처음부터 다시 검색
+                index = content.indexOf(findStr, 0);
+                if (index === -1 || index >= startIndex) {
+                    alert('더 이상 찾을 내용이 없습니다.');
+                    return;
+                }
+            }
+
+            // 텍스트 블록 지정 및 포커스 이동
+            textarea.focus();
+            textarea.setSelectionRange(index, index + findStr.length);
+        });
+
+        // 2. 바꾸기 (현재 선택된 단어만 변경 후 다음 찾기)
+        document.getElementById('btnReplace').addEventListener('click', () => {
+            const textarea = DOM.input;
+            const findStr = document.getElementById('findText').value;
+            const replaceStr = document.getElementById('replaceText').value;
+
+            if (!findStr) {
+                alert('찾을 내용을 입력해주세요.');
+                return;
+            }
+
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const selectedText = textarea.value.substring(start, end);
+
+            // 현재 드래그(선택)된 텍스트가 '찾을 내용'과 정확히 일치할 때만 치환
+            if (selectedText === findStr) {
+                const content = textarea.value;
+                textarea.value = content.substring(0, start) + replaceStr + content.substring(end);
+                
+                // 통계 실시간 업데이트
+                calculateStats();
+                
+                // 포커스 유지
+                textarea.focus();
+                textarea.setSelectionRange(start, start + replaceStr.length);
+                
+                // 바꾼 뒤 자동으로 '다음 찾기' 실행 (메모장과 동일한 UX)
+                setTimeout(() => {
+                    document.getElementById('btnFindNext').click();
+                }, 50);
+            } else {
+                // 선택된 상태가 아니면 먼저 '다음 찾기'를 실행
+                document.getElementById('btnFindNext').click();
+            }
+        });
+
+        // 3. 모두 바꾸기
+        document.getElementById('btnReplaceAll').addEventListener('click', () => {
+            const textarea = DOM.input;
+            const text = textarea.value;
+            const findStr = document.getElementById('findText').value;
+            const replaceStr = document.getElementById('replaceText').value;
+
+            if (!findStr) {
+                alert('찾을 내용을 입력해주세요.');
+                return;
+            }
+
+            const result = text.split(findStr).join(replaceStr);
+            
+            if (text === result && text !== '') {
+                alert('바꿀 내용이 없습니다.');
+            } else {
+                // 원본 입력창 내용을 즉시 변경
+                textarea.value = result;
+                calculateStats();
+                printResult(`"${findStr}" ➔ "${replaceStr}"\n\n모두 바꾸기 완료`, "치환 완료");
+            }
+        });
+
+        // 초기 로드시 세팅
+        calculateStats();
+
+    </script>
+</body>
+</html>
