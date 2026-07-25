@@ -466,7 +466,7 @@
     </div>
 
     <!-- ==========================================
-         JavaScript 구역 (절대 변경하지 않음)
+         JavaScript 구역
     =========================================== -->
     <script>
         // DOM 요소 캐싱
@@ -557,10 +557,30 @@
          * 4. 기능 버튼 로직 구현
          */
 
-        // [정리] 1줄 정리
+        // [정리] 1줄 정리 연속(중첩) 적용을 위한 상태 변수
+        let lastInputForCleanOne = "";
+        let currentCleanOneResult = "";
+
+        // [정리] 1줄 정리 (원본 유지 및 결과창 중첩 적용 완료됨)
         document.getElementById('btnCleanOne').addEventListener('click', () => {
-            const text = DOM.input.value.replace(/\r\n/g, '\n');
-            const cleaned = text.replace(/\n\n/g, '\n');
+            let baseText = "";
+            
+            // 입력창 원본 텍스트가 변하지 않았고, 이전에 1줄 정리를 누른 적이 있다면 아웃풋 결과물을 바탕으로 다시 깎아내림
+            if (DOM.input.value === lastInputForCleanOne && currentCleanOneResult !== "") {
+                baseText = currentCleanOneResult;
+            } else {
+                // 사용자가 입력창에 새 텍스트를 적었거나, 처음 누르는 거라면 인풋창 기준으로 초기화
+                baseText = DOM.input.value;
+                lastInputForCleanOne = DOM.input.value;
+            }
+
+            const text = baseText.replace(/\r\n/g, '\n');
+            
+            // 연속된 줄바꿈(2줄 이상)을 그룹으로 찾아서, 정확히 길이에서 1을 뺀 만큼만 반환
+            const cleaned = text.replace(/\n{2,}/g, match => '\n'.repeat(match.length - 1));
+            
+            // 다음번 클릭 시 중첩 적용을 위해 결과를 변수에 저장하고 결과창에만 뿌림 (원본 입력창 유지)
+            currentCleanOneResult = cleaned;
             printResult(cleaned);
         });
 
