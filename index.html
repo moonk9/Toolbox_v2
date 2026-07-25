@@ -378,17 +378,9 @@
                 <div class="nav-items">
                     <button id="btnCleanOne">1줄 정리</button>
                     <button id="btnCleanAll">전체 정리</button>
+                    <button id="btnAddLineBreak">줄바꿈 추가</button>
                     <button id="btnCopy">결과/입력 복사</button>
                     <button id="btnClear" class="btn-danger">초기화</button>
-                </div>
-            </div>
-
-            <!-- [ 분석 ] 그룹 -->
-            <div class="nav-group">
-                <div class="nav-title">Analyze</div>
-                <div class="nav-items">
-                    <button id="btnToken">예상 토큰 계산</button>
-                    <button id="btnTopWords">단어 빈도 TOP20</button>
                 </div>
             </div>
 
@@ -399,6 +391,7 @@
                     <button id="btnDupWords">중복 단어 찾기</button>
                     <button id="btnDupTags">중복 태그 찾기</button>
                     <button id="btnRemoveDupTags">중복 태그 제거</button>
+                    <button id="btnTopWords">단어 빈도 TOP20</button>
                 </div>
             </div>
 
@@ -561,25 +554,20 @@
         let lastInputForCleanOne = "";
         let currentCleanOneResult = "";
 
-        // [정리] 1줄 정리 (원본 유지 및 결과창 중첩 적용 완료됨)
+        // [정리] 1줄 정리
         document.getElementById('btnCleanOne').addEventListener('click', () => {
             let baseText = "";
             
-            // 입력창 원본 텍스트가 변하지 않았고, 이전에 1줄 정리를 누른 적이 있다면 아웃풋 결과물을 바탕으로 다시 깎아내림
             if (DOM.input.value === lastInputForCleanOne && currentCleanOneResult !== "") {
                 baseText = currentCleanOneResult;
             } else {
-                // 사용자가 입력창에 새 텍스트를 적었거나, 처음 누르는 거라면 인풋창 기준으로 초기화
                 baseText = DOM.input.value;
                 lastInputForCleanOne = DOM.input.value;
             }
 
             const text = baseText.replace(/\r\n/g, '\n');
-            
-            // 연속된 줄바꿈(2줄 이상)을 그룹으로 찾아서, 정확히 길이에서 1을 뺀 만큼만 반환
             const cleaned = text.replace(/\n{2,}/g, match => '\n'.repeat(match.length - 1));
             
-            // 다음번 클릭 시 중첩 적용을 위해 결과를 변수에 저장하고 결과창에만 뿌림 (원본 입력창 유지)
             currentCleanOneResult = cleaned;
             printResult(cleaned);
         });
@@ -589,6 +577,14 @@
             const text = DOM.input.value;
             const cleaned = text.replace(/(\r?\n[ \t]*){1,}\r?\n/g, '\n');
             printResult(cleaned);
+        });
+
+        // [정리] 줄바꿈 추가 (새로 추가된 기능)
+        document.getElementById('btnAddLineBreak').addEventListener('click', () => {
+            const text = DOM.input.value.replace(/\r\n/g, '\n');
+            // 단일 줄바꿈(\n) 앞뒤로 다른 문자가 있는 경우에만 두 줄(\n\n)로 치환합니다.
+            const result = text.replace(/([^\n])\n(?=[^\n])/g, '$1\n\n');
+            printResult(result);
         });
 
         // [정리] 복사
@@ -616,18 +612,7 @@
             calculateStats();
         });
 
-
-        // [분석] 예상 토큰 계산
-        document.getElementById('btnToken').addEventListener('click', () => {
-            const text = DOM.input.value;
-            const charCount = text.length;
-            const estimatedTokens = Math.ceil(charCount / 3.7);
-            
-            const content = `문자 수\n${charCount.toLocaleString()}\n\n예상 토큰\n${estimatedTokens.toLocaleString()}`;
-            printResult(content, "예상 토큰 계산");
-        });
-
-        // [분석] 단어 빈도 TOP20
+        // [검사] 단어 빈도 TOP20 (Inspect 탭으로 이동)
         document.getElementById('btnTopWords').addEventListener('click', () => {
             const text = DOM.input.value;
             const freqMap = getWordFrequencies(text, 1);
@@ -642,7 +627,6 @@
             
             printResult(content, "단어 빈도 TOP20");
         });
-
 
         // [검사] 중복 단어 찾기 (2글자 이상)
         document.getElementById('btnDupWords').addEventListener('click', () => {
