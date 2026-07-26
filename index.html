@@ -379,8 +379,7 @@
                     <button id="btnCleanOne">1줄 정리</button>
                     <button id="btnCleanAll">전체 정리</button>
                     <button id="btnAddLineBreak">줄바꿈 추가</button>
-                    <button id="btnCopy">결과/입력 복사</button>
-                    <button id="btnClear" class="btn-danger">초기화</button>
+                    <button id="btnCopy">복사</button>
                 </div>
             </div>
 
@@ -407,6 +406,11 @@
                     </div>
                     <button id="btnReplaceAll">모두 바꾸기</button>
                 </div>
+            </div>
+
+            <!-- [ 초기화 ] 그룹 (파괴적 액션 격리) -->
+            <div class="nav-group" style="margin-top: auto; padding-top: 24px; border-top: 1px dashed var(--border);">
+                <button id="btnClear" class="btn-danger">초기화</button>
             </div>
         </aside>
 
@@ -579,7 +583,7 @@
             printResult(cleaned);
         });
 
-        // [정리] 줄바꿈 추가 (새로 추가된 기능)
+        // [정리] 줄바꿈 추가
         document.getElementById('btnAddLineBreak').addEventListener('click', () => {
             const text = DOM.input.value.replace(/\r\n/g, '\n');
             // 단일 줄바꿈(\n) 앞뒤로 다른 문자가 있는 경우에만 두 줄(\n\n)로 치환합니다.
@@ -612,7 +616,7 @@
             calculateStats();
         });
 
-        // [검사] 단어 빈도 TOP20 (Inspect 탭으로 이동)
+        // [검사] 단어 빈도 TOP20
         document.getElementById('btnTopWords').addEventListener('click', () => {
             const text = DOM.input.value;
             const freqMap = getWordFrequencies(text, 1);
