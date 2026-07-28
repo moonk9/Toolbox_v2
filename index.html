@@ -126,6 +126,11 @@
             border-color: var(--accent);
             box-shadow: 0 0 0 3px var(--accent-glow);
         }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
 
         /* Danger 버튼 (살구색) */
         .btn-danger {
@@ -236,11 +241,11 @@
         }
 
         /* ==========================================
-           4. Textarea 스타일 (수정됨)
+           4. Textarea 스타일 
         =========================================== */
         textarea {
             width: 100%;
-            flex: 1; /* 부모 카드의 남은 영역을 꽉 채우도록 수정 */
+            flex: 1; /* 부모 카드의 남은 영역을 꽉 채우도록 설정 */
             background-color: #fcfcfd;
             border: 1px solid #dfe3e8;
             border-radius: 10px;
@@ -389,7 +394,7 @@
                     <button id="btnCleanOne">1줄 정리</button>
                     <button id="btnCleanAll">전체 정리</button>
                     <button id="btnAddLineBreak">줄바꿈 추가</button>
-                    <button id="btnCopy">결과/입력 복사</button>
+                    <button id="btnCopy">복사</button> <!-- 요청에 따라 버튼명 '복사'로 변경 -->
                 </div>
             </div>
 
@@ -406,7 +411,7 @@
 
             <!-- [ 치환 ] 그룹 -->
             <div class="nav-group">
-                <div class="nav-title">Replace</div>
+                <div class="nav-title">Replace & History</div>
                 <div class="nav-items">
                     <input type="text" id="findText" class="sidebar-input" placeholder="찾을 내용">
                     <input type="text" id="replaceText" class="sidebar-input" placeholder="바꿀 내용">
@@ -415,6 +420,12 @@
                         <button id="btnReplace">바꾸기</button>
                     </div>
                     <button id="btnReplaceAll">모두 바꾸기</button>
+                    
+                    <!-- 되돌리기/재실행 (History) 버튼 추가 -->
+                    <div class="row-horizontal" style="margin-top: 8px;">
+                        <button id="btnUndo" title="이전 결과로 되돌리기">↩ 이전</button>
+                        <button id="btnRedo" title="다음 결과로 재실행">다음 ↪</button>
+                    </div>
                 </div>
             </div>
 
@@ -495,6 +506,24 @@
             }
         };
 
+        // ==========================================
+        // 아웃풋 히스토리 상태 변수 (되돌리기 / 재실행)
+        // ==========================================
+        let outputHistory = [""]; 
+        let historyIndex = 0;
+
+        // 히스토리 저장 함수
+        const saveOutputHistory = (newText) => {
+            // 현재 상태와 완전히 동일한 값이면 무시
+            if (outputHistory[historyIndex] === newText) return;
+            
+            // 만약 뒤로가기 한 상태에서 새로운 작업이 들어오면, 현재 인덱스 이후의 미래 기록은 삭제
+            outputHistory = outputHistory.slice(0, historyIndex + 1);
+            
+            outputHistory.push(newText);
+            historyIndex++;
+        };
+
         /**
          * 1. 실시간 통계 계산 로직
          */
@@ -535,14 +564,16 @@
         DOM.input.addEventListener('input', calculateStats);
 
         /**
-         * 2. 결과 출력 공통 함수
+         * 2. 결과 출력 공통 함수 (히스토리 저장 포함)
          */
         const printResult = (content, headerTitle = null) => {
+            let finalContent = content;
             if (headerTitle) {
-                DOM.output.value = `${headerTitle}\n--------\n${content}`;
-            } else {
-                DOM.output.value = content;
+                finalContent = `${headerTitle}\n--------\n${content}`;
             }
+            
+            DOM.output.value = finalContent;
+            saveOutputHistory(finalContent);
         };
 
         /**
@@ -563,6 +594,29 @@
         /**
          * 4. 기능 버튼 로직 구현
          */
+
+        // [히스토리] ↩ 이전 (실행 취소)
+        document.getElementById('btnUndo').addEventListener('click', () => {
+            if (historyIndex > 0) {
+                historyIndex--;
+                DOM.output.value = outputHistory[historyIndex];
+                
+                // 1줄 정리용 상태 변수 동기화 (뒤로갔을 때 원활한 중첩 계산을 위해)
+                currentCleanOneResult = DOM.output.value;
+            }
+        });
+
+        // [히스토리] 다음 ↪ (재실행)
+        document.getElementById('btnRedo').addEventListener('click', () => {
+            if (historyIndex < outputHistory.length - 1) {
+                historyIndex++;
+                DOM.output.value = outputHistory[historyIndex];
+                
+                // 1줄 정리용 상태 변수 동기화 
+                currentCleanOneResult = DOM.output.value;
+            }
+        });
+
 
         // [정리] 1줄 정리 연속(중첩) 적용을 위한 상태 변수
         let lastInputForCleanOne = "";
@@ -596,7 +650,6 @@
         // [정리] 줄바꿈 추가
         document.getElementById('btnAddLineBreak').addEventListener('click', () => {
             const text = DOM.input.value.replace(/\r\n/g, '\n');
-            // 단일 줄바꿈(\n) 앞뒤로 다른 문자가 있는 경우에만 두 줄(\n\n)로 치환합니다.
             const result = text.replace(/([^\n])\n(?=[^\n])/g, '$1\n\n');
             printResult(result);
         });
@@ -623,6 +676,13 @@
         document.getElementById('btnClear').addEventListener('click', () => {
             DOM.input.value = '';
             DOM.output.value = '';
+            
+            // 초기화 시 히스토리도 깨끗하게 비움
+            outputHistory = [""];
+            historyIndex = 0;
+            currentCleanOneResult = "";
+            lastInputForCleanOne = "";
+            
             calculateStats();
         });
 
